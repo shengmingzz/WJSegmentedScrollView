@@ -41,7 +41,7 @@
         }
     }
     @catch (NSException *exception) {
-        NSLog(@"%s,%d,%@",__func__,__LINE__,exception);
+//        NSLog(@"%s,%d,%@",__func__,__LINE__,exception);
     }
 }
 
@@ -248,7 +248,6 @@
             CGFloat yPos = self.segScrollView.contentOffset.y - change;
             yPos = yPos > offset ? offset : yPos;
             CGPoint updatedPos = CGPointMake(self.segScrollView.contentOffset.x, yPos);
-            NSLog(@"handleScrollDown  updatedPos:%@,oldPosition:%@",NSStringFromCGPoint(updatedPos),NSStringFromCGPoint(oldPosition));
             
             if (oldPosition.y <= 0) {
                 [self setContentOffset:scrollView point:CGPointMake(self.segScrollView.contentOffset.x, 0)];

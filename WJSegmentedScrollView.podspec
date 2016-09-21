@@ -3,18 +3,14 @@ Pod::Spec.new do |s|
 
   s.name         = "WJSegmentedScrollView"
   s.version      = "0.0.1"
-  s.summary      = "segment scrollview."
-
-  s.description  = <<-DESC
-                   segment scrollview
-                   DESC
+  s.summary      = "Custom segmented header scrollview controller.."
 
   s.homepage     = "https://github.com/shengmingzz/WJSegmentedScrollView"
   s.author = { 'td705' => 'ryds4321@sohu.com' }
   # s.social_media_url   = "http://twitter.com/"
   # s.screenshots  = "www.example.com/screenshots_1.gif", "www.example.com/screenshots_2.gif"
 
-  s.license      = "MIT"
+  s.license = { :type => 'MIT', :file => 'LICENSE' }
 
   s.source       = { :git => "https://github.com/shengmingzz/WJSegmentedScrollView.git", :tag => "#{s.version}" }
 

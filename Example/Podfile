@@ -1,0 +1,4 @@
+target 'WJSegmentedScrollViewDemo' do
+    pod 'MJRefresh'
+    pod "WJSegmentedScrollView", :path => "../"
+end

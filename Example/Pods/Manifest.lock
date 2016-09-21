@@ -1,0 +1,25 @@
+PODS:
+  - HMSegmentedControl (1.5.2)
+  - Masonry (0.6.4)
+  - MJRefresh (3.1.12)
+  - WJSegmentedScrollView (0.0.1):
+    - HMSegmentedControl (~> 1.5.2)
+    - Masonry (~> 0.6.1)
+
+DEPENDENCIES:
+  - MJRefresh
+  - WJSegmentedScrollView (from `../`)
+
+EXTERNAL SOURCES:
+  WJSegmentedScrollView:
+    :path: ../
+
+SPEC CHECKSUMS:
+  HMSegmentedControl: 83b9686022d2176fb6457d2bdb61e5d6393fed7d
+  Masonry: 281802d04d787ea2973179ee8bcb50500579ede2
+  MJRefresh: b96cdb21c4aa75a7b07654311ab2f315c497e806
+  WJSegmentedScrollView: 17d60dba0962185a1b221d350176edc53b86585f
+
+PODFILE CHECKSUM: 6a1cb1c38d24f0c3b3ebee1a76fd4cc8994a12f4
+
+COCOAPODS: 1.0.0

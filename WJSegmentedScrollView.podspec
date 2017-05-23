@@ -2,7 +2,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "WJSegmentedScrollView"
-  s.version      = "0.0.1"
+  s.version      = "0.0.2"
   s.summary      = "Custom segmented header scrollview controller.."
 
   s.homepage     = "https://github.com/shengmingzz/WJSegmentedScrollView"

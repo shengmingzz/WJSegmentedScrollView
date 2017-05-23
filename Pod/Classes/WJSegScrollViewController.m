@@ -34,16 +34,25 @@
         if ([_segScrollView observationInfo]) {
             [_segScrollView removeObserver:self forKeyPath:@"contentOffset"];
         }
-        for (UIViewController *vc in self.controllers) {
-            if ([vc.view observationInfo]) {
-                [vc.view removeObserver:self forKeyPath:@"contentOffset"];
+        for (UIViewController<WJSegPageViewControllerSource> *vc in self.controllers) {
+            UIView *view = [vc streachScrollView];
+            if (view) {
+                if ([view observationInfo]) {
+                    [view removeObserver:self forKeyPath:@"contentOffset"];
+                }
+            } else {
+                if ([vc.view observationInfo]) {
+                    [vc.view removeObserver:self forKeyPath:@"contentOffset"];
+                }
             }
+            
         }
     }
     @catch (NSException *exception) {
-//        NSLog(@"%s,%d,%@",__func__,__LINE__,exception);
+        //        NSLog(@"%s,%d,%@",__func__,__LINE__,exception);
     }
 }
+
 
 - (instancetype)init {
     self = [super init];
@@ -65,12 +74,15 @@
     }
     return self;
 }
-
+/*
+ * 外部scrollview segScrollView上线滑动,内容高度header高度 + segment高度 + 加上视图控制器高度
+ * 底部scrollview ctrlsScrollView左右滑动,内容高度为视图控制器高度
+ */
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationController.navigationBar.translucent = NO;
     
-    float height = [UIScreen mainScreen].bounds.size.height + self.headerViewHeight - self.topSpacing - self.bottomSpacing;
+    float height = [UIScreen mainScreen].bounds.size.height + self.headerViewHeight - self.topSpacing - self.bottomSpacing - self.marginTopSpacing;
     float width = [UIScreen mainScreen].bounds.size.width;
     
     [self.view addSubview:self.segScrollView];
@@ -143,7 +155,7 @@
     }];
     
     UIView *lastView = nil;
-    for (UIViewController *vc in self.controllers) {
+    for (UIViewController<WJSegPageViewControllerSource> *vc in self.controllers) {
         [self addChildViewController:vc];
         [self.ctrlsContentView addSubview:vc.view];
         [vc.view mas_makeConstraints:^(MASConstraintMaker *make) {
@@ -152,7 +164,12 @@
             make.width.equalTo(@(width));
         }];
         [vc didMoveToParentViewController:self];
-        [vc.view addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+        
+        if ([vc respondsToSelector:@selector(streachScrollView)]) {
+            [[vc streachScrollView] addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+        } else {
+            [vc.view addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+        }
         lastView = vc.view;
     }
 }
@@ -172,6 +189,11 @@
     }
     [self.headerView addSubview:view];
 }
+
+-(void)setTitles:(NSArray*)titles {
+    [self.segmentControl setSectionTitles:titles];
+    [self.segmentControl setNeedsDisplay];
+}
 #pragma mark - UIScrollViewDelegate
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     if (scrollView == self.ctrlsScrollView) {
@@ -187,7 +209,7 @@
 - (void)segmentControlDidChangedValue:(id)sender {
     NSInteger selectIndex = self.segmentControl.selectedSegmentIndex;
     [self.ctrlsScrollView setContentOffset:CGPointMake(selectIndex * CGRectGetWidth(self.ctrlsScrollView.frame), 0) animated:NO];
-//    [self setChildViewControllerWithCurrentIndex:selectIndex];
+    //    [self setChildViewControllerWithCurrentIndex:selectIndex];
     if (self.delegate && [self.delegate respondsToSelector:@selector(segScrollViewVC:didSelectIndex:)]) {
         [self.delegate segScrollViewVC:self didSelectIndex:selectIndex];
     }
@@ -203,6 +225,7 @@
     }
 }
 
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context {
     if (!self.observing) {
         return;
@@ -211,12 +234,58 @@
     if (scrollView == nil) {
         return;
     }
+    
+    float margin = self.segScrollView.contentOffset.y - self.headerViewHeight;
+    if (margin < 0 && ABS(margin) <= self.marginTopSpacing) {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(hasScrollAtTopForSegScrollViewVC:)]) {
+            [self.delegate hasScrollAtTopForSegScrollViewVC:self];
+        }
+    } else if (ABS(margin) > self.marginTopSpacing+20){
+        if (self.delegate && [self.delegate respondsToSelector:@selector(hasScrollLeaveTopForSegScrollViewVC:)]) {
+            [self.delegate hasScrollLeaveTopForSegScrollViewVC:self];
+        }
+    }
+    
     if (scrollView == self.segScrollView) {
+        if (self.segScrollView.contentOffset.y > (self.headerViewHeight-self.marginTopSpacing)) {
+            self.segScrollView.contentOffset = CGPointMake(0, self.headerViewHeight-self.marginTopSpacing);
+        }
         return;
     }
     CGPoint new = [change[NSKeyValueChangeNewKey] CGPointValue];
     CGPoint old = [change[NSKeyValueChangeOldKey] CGPointValue];
     CGFloat diff = old.y - new.y;
+    
+    /*float offsety = self.segScrollView.contentOffset.y - self.headerViewHeight - self.segmentHeight;
+     float height = [UIScreen mainScreen].bounds.size.height  - self.topSpacing - self.bottomSpacing;
+     float useHeight = height - offsety;
+     if (useHeight > (height-self.headerViewHeight - self.segmentHeight)) {
+     useHeight = height-self.headerViewHeight - self.segmentHeight;
+     }
+     if (useHeight < 0) {
+     useHeight = 0;
+     }*/
+    
+    float offsety = self.segScrollView.contentOffset.y - self.headerViewHeight;
+    float height = [UIScreen mainScreen].bounds.size.height  - self.topSpacing - self.bottomSpacing - self.segmentHeight - self.marginTopSpacing;
+    float useHeight = height - ABS(offsety)/*offsety*/;
+    if (useHeight < (height-self.headerViewHeight - self.segmentHeight)) {
+        useHeight = height-self.headerViewHeight - self.segmentHeight;
+    }
+    if (useHeight > height) {
+        useHeight = height ;
+    }
+    if (useHeight < 0) {
+        useHeight = 0;
+    }
+    if (self.segScrollView.contentOffset.y > (self.headerViewHeight-self.marginTopSpacing)) {
+        self.segScrollView.contentOffset = CGPointMake(0, self.headerViewHeight-self.marginTopSpacing);
+    }
+    /*
+     [self.ctrlsScrollView mas_updateConstraints:^(MASConstraintMaker *make) {
+     make.height.equalTo(@(useHeight));
+     }];*/
+    
     if (diff > 0.0) {
         [self handleScrollUp:scrollView change:diff oldPosition:old];
     } else {
@@ -242,7 +311,7 @@
 }
 // down to up
 - (void)handleScrollDown:(UIScrollView*)scrollView change:(CGFloat)change oldPosition:(CGPoint)oldPosition {
-    CGFloat offset = self.headerViewHeight - self.headerViewOffsetHeight;
+    CGFloat offset = self.headerViewHeight - self.headerViewOffsetHeight-self.marginTopSpacing;
     if (self.segScrollView.contentOffset.y < offset) {
         if (scrollView.contentOffset.y >= 0.0) {
             CGFloat yPos = self.segScrollView.contentOffset.y - change;

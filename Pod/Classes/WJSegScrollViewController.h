@@ -24,6 +24,8 @@
 
 @optional
 - (void)segScrollViewVC:(WJSegScrollViewController*)scrollViewVC didSelectIndex:(NSInteger)index;
+- (void)hasScrollAtTopForSegScrollViewVC:(WJSegScrollViewController*)scrollViewVC;
+- (void)hasScrollLeaveTopForSegScrollViewVC:(WJSegScrollViewController*)scrollViewVC;
 @end
 
 @interface WJSegScrollViewController : UIViewController
@@ -52,6 +54,12 @@
  *  bottom spacing ,default is 0
  */
 @property (nonatomic,assign) float bottomSpacing;
+/**
+ *  top maring spacing,leave space ,default is 0,
+ */
+@property (nonatomic,assign) float marginTopSpacing;
 
 - (void)addHeaderView:(UIView*)view;
+
+-(void)setTitles:(NSArray*)titles;
 @end
